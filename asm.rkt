@@ -276,6 +276,7 @@
       [(and (equal? first-token-kind 'id) (= token-amount 2)(equal? (list->string (token-lexeme first-token)) "jalr")) (jr-jalr-parse (second single-line) 9)]
       [else
        (match single-line
+         ;add sub slt sltu
     [(list (token 'id '(#\a #\d #\d)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 32 0)))]
     [(list (token 'id '(#\s #\u #\b)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
@@ -284,14 +285,24 @@
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 42 0)))]
     [(list (token 'id '(#\s #\l #\t #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 43 0)))]
+         ;beq, bne
     [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'int i))
-     (if (and (>= i -32768)(<= i 32767)) (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff))) (error 'ERROR "exceed 0xffff\n"))]
+     (if (and (>= i -32768)(<= i 32767))
+         (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
+         (error 'ERROR "exceed 0xffff\n"))]
     [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'int i))
-     (if (and (>= i -32768)(<= i 32767)) (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff))) (error 'ERROR "exceed 0xffff\n"))]
+     (if (and (>= i -32768)(<= i 32767))
+         (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
+         (error 'ERROR "exceed 0xffff\n"))]
     [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'hexint i))
-     (if (and (>= i 0)(<= i 65535)) (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff))) (error 'ERROR "exceed 0xffff\n"))]
+     (if (and (>= i 0)(<= i 65535))
+         (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
+         (error 'ERROR "exceed 0xffff\n"))]
     [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'hexint i))
-     (if (and (>= i 0)(<= i 65535)) (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff))) (error 'ERROR "exceed 0xffff\n"))]
+     (if (and (>= i 0)(<= i 65535))
+         (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
+         (error 'ERROR "exceed 0xffff\n"))]
+         ; lis, mflo, mfhi
     [(list (token 'id '(#\l #\i #\s)) (token 'register d))
      (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 20 0)))]
     [(list (token 'id '(#\m #\f #\l #\o)) (token 'register d))
@@ -307,6 +318,14 @@
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 26 0)))]
     [(list (token 'id '(#\d #\i #\v #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 27 0)))]
+    [(list (token 'id '(#\s #\u)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'lparen '(#\))))
+     (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
+    [(list (token 'id '(#\s #\u)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'lparen '(#\))))
+     (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
+    [(list (token 'id '(#\l #\u)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'lparen '(#\))))
+     (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
+    [(list (token 'id '(#\l #\u)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'lparen '(#\))))
+     (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
     [else (error 'ERROR "unexpected commend line\n")])])))
 
 
