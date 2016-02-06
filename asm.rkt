@@ -199,7 +199,6 @@
   (hash-set! label-ht (substring name 0 (- (string-length name) 1)) line-num) false))
 
 ; This function is to add and clean labels
-; also translate beq/bne $_, $_, label to beq/bne $_, $_, number
 (define (clean-label lines line-num)
   (cond [(empty? lines) empty]
         [else
@@ -221,9 +220,16 @@
                 (local [(define after-label (single-line-add-label single-line))]
                 (cond [(empty? after-label) (clean-label (rest lines) line-num)] ;If it is all labels in one line, then the line-num should not be changed
                       [else (cons after-label (clean-label (rest lines) (+ 4 line-num)))]))]
-             [else
+             [else (cons single-line (clean-label (rest lines) (+ 4 line-num)))]))]))
 
-              (match single-line [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
+
+; translate beq/bne $_, $_, label to beq/bne $_, $_, number
+(define (translate-label lines line-num)
+  (cond [(empty? lines) empty]
+        [else
+         (local
+           [(define single-line (first lines))]
+           (match single-line [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
                       (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
                           (cons (list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
                                       (token 'int (- (/ (- (hash-ref label-ht (list->string i) -2) line-num) 4) 1)))
@@ -233,8 +239,7 @@
                           (cons (list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
                                       (token 'int (- (/ (- (hash-ref label-ht (list->string i) -2) line-num) 4) 1)))
                                 (clean-label (rest lines) (+ 4 line-num))))]
-                [_ (cons single-line (clean-label (rest lines) (+ 4 line-num)))])]))]))
-
+                [_ (cons single-line (clean-label (rest lines) (+ 4 line-num)))]))]))
 
 ; jr option = 8, jalr option = 9
 (define (jr-jalr-parse par option)
@@ -282,7 +287,7 @@
 
 
 
-(define (scan-all)  (map recog-ins (clean-label (scan-input) 0)) (void))
+(define (scan-all)  (map recog-ins (translate-label (clean-label (scan-input) 0) 0)) (void))
 
 (scan-all)
 ;label tables
