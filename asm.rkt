@@ -292,6 +292,12 @@
      (if (and (>= i 0)(<= i 65535)) (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff))) (error 'ERROR "exceed 0xffff\n"))]
     [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'hexint i))
      (if (and (>= i 0)(<= i 65535)) (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff))) (error 'ERROR "exceed 0xffff\n"))]
+    [(list (token 'id '(#\l #\i #\s)) (token 'register d))
+     (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 20 0)))]
+    [(list (token 'id '(#\m #\f #\l #\o)) (token 'register d))
+     (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 18 0)))]
+    [(list (token 'id '(#\m #\f #\h #\i)) (token 'register d))
+     (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 16 0)))]
     [else (error 'ERROR "unexpected commend line\n")])])))
 
 
