@@ -318,14 +318,23 @@
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 26 0)))]
     [(list (token 'id '(#\d #\i #\v #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 27 0)))]
+         ;sw lw
     [(list (token 'id '(#\s #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
-     (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
+     (if (and (>= i -32768)(<= i 32767))
+         (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
+         (error 'ERROR "exceed 0xffff\n"))]
     [(list (token 'id '(#\s #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
-     (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
+     (if (and (>= i 0)(<= i 65535))
+         (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
+         (error 'ERROR "exceed 0xffff\n"))]
     [(list (token 'id '(#\l #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
-     (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
+     (if (and (>= i -32768)(<= i 32767))
+         (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
+         (error 'ERROR "exceed 0xffff\n"))]
     [(list (token 'id '(#\l #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
-     (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
+     (if (and (>= i -32768)(<= i 32767))
+         (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
+         (error 'ERROR "exceed 0xffff\n"))]
     [else (error 'ERROR "unexpected commend line\n")])])))
 
 
