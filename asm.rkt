@@ -227,15 +227,9 @@
 (define (jr-jalr-parse par option)
   (match par
       [(token 'register token-lexeme-value)
-       (local
-         ;jr 0000 00ss sss0 0000 0000 0000 0000 1000 jalr 0000 00ss sss0 0000 0000 0000 0000 1001
-         [(define jr-word (bitwise-ior (arithmetic-shift 0 26)
-                            (arithmetic-shift token-lexeme-value 21)
-                            (arithmetic-shift option 0)))]
-         (output jr-word))
+         (output bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift token-lexeme-value 21)  (arithmetic-shift option 0))
          void]
       [_ (error 'ERROR "unexpected commend line jr/jalr in parse\n")]))
-
 
 
 
@@ -250,7 +244,17 @@
       [(and (equal? first-token-kind 'dotword) (= token-amount 2)) (dotword-parse (second single-line))]
       [(and (equal? first-token-kind 'id) (= token-amount 2)(equal? (list->string (token-lexeme first-token)) "jr")) (jr-jalr-parse (second single-line) 8)]
       [(and (equal? first-token-kind 'id) (= token-amount 2)(equal? (list->string (token-lexeme first-token)) "jalr")) (jr-jalr-parse (second single-line) 9)]
-      [else (error 'ERROR "unexpected commend line\n")])))
+      [else
+       (match single-line
+    [(list (token 'id '(#\a #\d #\d)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
+     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 34 0)))]
+    [(list (token 'id '(#\s #\u #\b)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
+     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 32 0)))]
+    [(list (token 'id '(#\s #\l #\t)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
+     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 42 0)))]
+    [(list (token 'id '(#\s #\l #\t #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
+     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 43 0)))]
+    [else (error 'ERROR "unexpected commend line\n")])])))
 
 
 
