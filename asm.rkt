@@ -232,11 +232,8 @@
          [(define jr-word (bitwise-ior (arithmetic-shift 0 26)
                             (arithmetic-shift token-lexeme-value 21)
                             (arithmetic-shift option 0)))]
-         (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -24) #xff))
-         (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -16) #xff))
-         (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -8) #xff))
-         (write-byte (bitwise-and jr-word #xff)))
-         (printf token-lexeme-value)]
+         (output jr-word))
+         void]
       [_ (error 'ERROR "unexpected commend line jr/jalr in parse\n")]))
 
 
