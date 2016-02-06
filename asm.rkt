@@ -228,18 +228,30 @@
   (cond [(empty? lines) empty]
         [else
          (local
-           [(define single-line (first lines))]
-           (match single-line [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
+           [(define single-line (first lines))
+           (define (single-line-skip-label line-with-labels)`
+               (cond
+                 [(empty? line-with-labels) empty]
+                 [(equal? (token-kind (first line-with-labels)) 'label) (single-line-skip-label (rest line-with-labels))]
+                 [else (cons (first line-with-labels) (single-line-skip-label (rest line-with-labels)))]))]
+           (cond
+             [(equal? (token-kind (first single-line)) 'label)
+                (local [(define after-label (single-line-skip-label single-line))]
+                (cond [(empty? after-label) (clean-label (rest lines) line-num)] ;If it is all labels in one line, then the line-num should not be changed
+                      [else (cons after-label (translate-label (rest lines) (+ 4 line-num)))]))]
+             [else
+              (match single-line
+             [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
                       (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
                           (cons (list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
                                       (token 'int (- (/ (- (hash-ref label-ht (list->string i) -2) line-num) 4) 1)))
-                                (clean-label (rest lines) (+ 4 line-num))))]
+                                (translate-label (rest lines) (+ 4 line-num))))]
                 [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
                       (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
                           (cons (list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
                                       (token 'int (- (/ (- (hash-ref label-ht (list->string i) -2) line-num) 4) 1)))
-                                (clean-label (rest lines) (+ 4 line-num))))]
-                [_ (cons single-line (clean-label (rest lines) (+ 4 line-num)))]))]))
+                                (translate-label (rest lines) (+ 4 line-num))))]
+                [_ (cons single-line (translate-label (rest lines) (+ 4 line-num)))])]))]))
 
 ; jr option = 8, jalr option = 9
 (define (jr-jalr-parse par option)
