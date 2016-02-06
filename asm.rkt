@@ -78,19 +78,19 @@
 
 (define asmfinal
   (list
-    'register
-    'int
-    'id
-    'label
-    'comma
-    'lparen
-    'rparen
-    'zero
-    'hexint
-    'comment
-    'dotword
-    'whitespace
-    ))
+   'register
+   'int
+   'id
+   'label
+   'comma
+   'lparen
+   'rparen
+   'zero
+   'hexint
+   'comment
+   'dotword
+   'whitespace
+   ))
 
 ;; scan-acc is the main workhorse of the lexer. It uses accumulative recursion
 ;; to run the FSM specified by (trans, state, final) on the list of characters cl.
@@ -102,24 +102,24 @@
 (define (scan-acc cl trans state final acc tacc)
   (cond
     [(empty? cl)
-       (if (member state final)
-           (if (or (symbol=? state 'whitespace) (symbol=? state 'comment))
-               (reverse tacc)
-               (reverse (cons (finalize-token state (reverse acc)) tacc)))
-           (error 'ERROR "unexpected end of string\n"))]
+     (if (member state final)
+         (if (or (symbol=? state 'whitespace) (symbol=? state 'comment))
+             (reverse tacc)
+             (reverse (cons (finalize-token state (reverse acc)) tacc)))
+         (error 'ERROR "unexpected end of string\n"))]
     [else
-      (let ([trl (memf (lambda (x) (found-trans? state (first cl) x)) trans)])
-        (cond
-          [(and (boolean? trl) (member state final))
-             (if (symbol=? state 'whitespace)
-                 (scan-acc cl trans 'start final empty tacc)
-                 (scan-acc cl trans 'start final empty (cons (finalize-token state (reverse acc)) tacc)))]
-          [(boolean? trl)
-             (error 'ERROR "left to parse:~a ~a\n" state (list->string cl))]
-          [(symbol=? state 'comment)
-             (reverse tacc)]
-          [else
-             (scan-acc (rest cl) trans (transition-next (first trl)) final (cons (first cl) acc) tacc)]))]))
+     (let ([trl (memf (lambda (x) (found-trans? state (first cl) x)) trans)])
+       (cond
+         [(and (boolean? trl) (member state final))
+          (if (symbol=? state 'whitespace)
+              (scan-acc cl trans 'start final empty tacc)
+              (scan-acc cl trans 'start final empty (cons (finalize-token state (reverse acc)) tacc)))]
+         [(boolean? trl)
+          (error 'ERROR "left to parse:~a ~a\n" state (list->string cl))]
+         [(symbol=? state 'comment)
+          (reverse tacc)]
+         [else
+          (scan-acc (rest cl) trans (transition-next (first trl)) final (cons (first cl) acc) tacc)]))]))
 
 ;; helper functions for scan-acc
 
@@ -168,35 +168,36 @@
   (cond
     [(eof-object? line) empty]
     [(> (string-length line) 0) ; Ignore blank lines
-        ; Ignore comment-only lines as well
-        ; When a comment-only line is scanned, it is omitted
-        (define scanned (scan line))
-        (cond
-          [(empty? scanned) (scan-input)]
-          ;[else (printf "~a~n" scanned)(scan-input)])]
-          [else (cons scanned (scan-input))])] 
+     ; Ignore comment-only lines as well
+     ; When a comment-only line is scanned, it is omitted
+     (define scanned (scan line))
+     (cond
+       [(empty? scanned) (scan-input)]
+       ;[else (printf "~a~n" scanned)(scan-input)])]
+       [else (cons scanned (scan-input))])] 
     [else (scan-input)]))
 
 (define (output token-lexeme-value)
   (cond [(= token-lexeme-value -2) (error 'ERROR "no existing label\n")]
         [else
-  (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -24) #xff))
-  (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -16) #xff))
-  (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -8) #xff))
-  (write-byte (bitwise-and token-lexeme-value #xff)); code from Tory's slides
-  (void)]))
+         (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -24) #xff))
+         (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -16) #xff))
+         (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -8) #xff))
+         (write-byte (bitwise-and token-lexeme-value #xff)); code from Tory's slides
+         (void)]))
 
 (define (dotword-parse word-token)
-    (match word-token
-      [(or (token 'int token-lexeme-value) (token 'hexint token-lexeme-value)) (output token-lexeme-value)]
-      [(token 'id token-lexeme-value) ; (printf "~a" (list->string token-lexeme-value))
-                                      (output (hash-ref label-ht (list->string token-lexeme-value) -2))]
-      [_ (error 'ERROR "unexpected commend line in parse\n")]))
+  (match word-token
+    [(or (token 'int token-lexeme-value) (token 'hexint token-lexeme-value))
+     (output token-lexeme-value)]
+    [(token 'id token-lexeme-value) 
+     (output (hash-ref label-ht (list->string token-lexeme-value) -2))]
+    [_ (error 'ERROR "unexpected commend line in parse\n")]))
 
 
 (define (add-label-to-heaptable name line-num)
   (if (empty? (hash-ref label-ht (substring name 0 (- (string-length name) 1)) empty))
-  (hash-set! label-ht (substring name 0 (- (string-length name) 1)) line-num) false))
+      (hash-set! label-ht (substring name 0 (- (string-length name) 1)) line-num) false))
 
 ; This function is to add and clean labels
 (define (clean-label lines line-num)
@@ -204,20 +205,19 @@
         [else
          (local
            [(define single-line (first lines))
-           (define (single-line-add-label line-with-labels)
-               (cond
-                 [(empty? line-with-labels) empty]
-                 [(equal? (token-kind (first line-with-labels)) 'label)
-                  (if (add-label-to-heaptable (list->string (token-lexeme (first line-with-labels))) line-num)
-                  (single-line-add-label (rest line-with-labels))
-                  (error 'ERROR "Existing label can not be added\n"))]
-                 [(not (= 0 (length (filter (lambda (single-token) (equal? (token-kind single-token) 'label)) line-with-labels))))
-                    (error 'ERROR "Label not at the beginning of a line\n")]
-                 [else (cons (first line-with-labels) (single-line-add-label (rest line-with-labels)))]))]
+            (define (single-line-add-label line-with-labels)
+              (cond
+                [(empty? line-with-labels) empty]
+                [(equal? (token-kind (first line-with-labels)) 'label)
+                 (if (add-label-to-heaptable (list->string (token-lexeme (first line-with-labels))) line-num)
+                     (single-line-add-label (rest line-with-labels))
+                     (error 'ERROR "Existing label can not be added\n"))]
+                [(not (= 0 (length (filter (lambda (single-token) (equal? (token-kind single-token) 'label)) line-with-labels))))
+                 (error 'ERROR "Label not at the beginning of a line\n")]
+                [else (cons (first line-with-labels) (single-line-add-label (rest line-with-labels)))]))]
            (cond
              [(equal? (token-kind (first single-line)) 'label)
-                ; (cond [(andmap (lambda (single-token) (equal? (token-kind single-token) 'label)) single-line) (set! line-num (- line-num 4))])
-                (local [(define after-label (single-line-add-label single-line))]
+              (local [(define after-label (single-line-add-label single-line))]
                 (cond [(empty? after-label) (clean-label (rest lines) line-num)] ;If it is all labels in one line, then the line-num should not be changed
                       [else (cons after-label (clean-label (rest lines) (+ 4 line-num)))]))]
              [else (cons single-line (clean-label (rest lines) (+ 4 line-num)))]))]))
@@ -229,37 +229,37 @@
         [else
          (local
            [(define single-line (first lines))
-           (define (single-line-skip-label line-with-labels)`
-               (cond
-                 [(empty? line-with-labels) empty]
-                 [(equal? (token-kind (first line-with-labels)) 'label) (single-line-skip-label (rest line-with-labels))]
-                 [else (cons (first line-with-labels) (single-line-skip-label (rest line-with-labels)))]))]
+            (define (single-line-skip-label line-with-labels)`
+              (cond
+                [(empty? line-with-labels) empty]
+                [(equal? (token-kind (first line-with-labels)) 'label) (single-line-skip-label (rest line-with-labels))]
+                [else (cons (first line-with-labels) (single-line-skip-label (rest line-with-labels)))]))]
            (cond
              [(equal? (token-kind (first single-line)) 'label)
-                (local [(define after-label (single-line-skip-label single-line))]
+              (local [(define after-label (single-line-skip-label single-line))]
                 (cond [(empty? after-label) (clean-label (rest lines) line-num)] ;If it is all labels in one line, then the line-num should not be changed
                       [else (cons after-label (translate-label (rest lines) (+ 4 line-num)))]))]
              [else
               (match single-line
-             [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
-                      (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
-                          (cons (list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
-                                      (token 'int (- (/ (- (hash-ref label-ht (list->string i) -2) line-num) 4) 1)))
-                                (translate-label (rest lines) (+ 4 line-num))))]
+                [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
+                 (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
+                     (cons (list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
+                                 (token 'int (- (/ (- (hash-ref label-ht (list->string i) -2) line-num) 4) 1)))
+                           (translate-label (rest lines) (+ 4 line-num))))]
                 [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
-                      (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
-                          (cons (list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
-                                      (token 'int (- (/ (- (hash-ref label-ht (list->string i) -2) line-num) 4) 1)))
-                                (translate-label (rest lines) (+ 4 line-num))))]
+                 (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
+                     (cons (list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
+                                 (token 'int (- (/ (- (hash-ref label-ht (list->string i) -2) line-num) 4) 1)))
+                           (translate-label (rest lines) (+ 4 line-num))))]
                 [_ (cons single-line (translate-label (rest lines) (+ 4 line-num)))])]))]))
 
 ; jr option = 8, jalr option = 9
 (define (jr-jalr-parse par option)
   (match par
-      [(token 'register token-lexeme-value)
-         (output bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift token-lexeme-value 21)  (arithmetic-shift option 0))
-         void]
-      [_ (error 'ERROR "unexpected commend line jr/jalr in parse\n")]))
+    [(token 'register token-lexeme-value)
+     (output bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift token-lexeme-value 21)  (arithmetic-shift option 0))
+     void]
+    [_ (error 'ERROR "unexpected commend line jr/jalr in parse\n")]))
 
 
 
@@ -267,8 +267,8 @@
 (define (recog-ins single-line)
   (local
     [(define first-token (first single-line))
-    (define first-token-kind (token-kind first-token))
-    (define token-amount (length single-line))]
+     (define first-token-kind (token-kind first-token))
+     (define token-amount (length single-line))]
     (cond
       [(empty? first-token) empty]
       [(and (equal? first-token-kind 'dotword) (= token-amount 2)) (dotword-parse (second single-line))]
@@ -277,65 +277,65 @@
       [else
        (match single-line
          ;add sub slt sltu
-    [(list (token 'id '(#\a #\d #\d)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
-     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 32 0)))]
-    [(list (token 'id '(#\s #\u #\b)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
-     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 34 0)))]
-    [(list (token 'id '(#\s #\l #\t)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
-     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 42 0)))]
-    [(list (token 'id '(#\s #\l #\t #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
-     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 43 0)))]
+         [(list (token 'id '(#\a #\d #\d)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
+          (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 32 0)))]
+         [(list (token 'id '(#\s #\u #\b)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
+          (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 34 0)))]
+         [(list (token 'id '(#\s #\l #\t)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
+          (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 42 0)))]
+         [(list (token 'id '(#\s #\l #\t #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
+          (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 43 0)))]
          ;beq, bne
-    [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'int i))
-     (if (and (>= i -32768)(<= i 32767))
-         (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
-         (error 'ERROR "exceed 0xffff\n"))]
-    [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'int i))
-     (if (and (>= i -32768)(<= i 32767))
-         (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
-         (error 'ERROR "exceed 0xffff\n"))]
-    [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'hexint i))
-     (if (and (>= i 0)(<= i 65535))
-         (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
-         (error 'ERROR "exceed 0xffff\n"))]
-    [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'hexint i))
-     (if (and (>= i 0)(<= i 65535))
-         (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
-         (error 'ERROR "exceed 0xffff\n"))]
+         [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'int i))
+          (if (and (>= i -32768)(<= i 32767))
+              (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
+              (error 'ERROR "exceed 0xffff\n"))]
+         [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'int i))
+          (if (and (>= i -32768)(<= i 32767))
+              (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
+              (error 'ERROR "exceed 0xffff\n"))]
+         [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'hexint i))
+          (if (and (>= i 0)(<= i 65535))
+              (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
+              (error 'ERROR "exceed 0xffff\n"))]
+         [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'hexint i))
+          (if (and (>= i 0)(<= i 65535))
+              (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))
+              (error 'ERROR "exceed 0xffff\n"))]
          ; lis, mflo, mfhi
-    [(list (token 'id '(#\l #\i #\s)) (token 'register d))
-     (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 20 0)))]
-    [(list (token 'id '(#\m #\f #\l #\o)) (token 'register d))
-     (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 18 0)))]
-    [(list (token 'id '(#\m #\f #\h #\i)) (token 'register d))
-     (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 16 0)))]
+         [(list (token 'id '(#\l #\i #\s)) (token 'register d))
+          (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 20 0)))]
+         [(list (token 'id '(#\m #\f #\l #\o)) (token 'register d))
+          (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 18 0)))]
+         [(list (token 'id '(#\m #\f #\h #\i)) (token 'register d))
+          (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 16 0)))]
          ; mult, multu, div, divu
-    [(list (token 'id '(#\m #\u #\l #\t)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
-     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 24 0)))]
-    [(list (token 'id '(#\m #\u #\l #\t #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
-     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 25 0)))]
-    [(list (token 'id '(#\d #\i #\v)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
-     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 26 0)))]
-    [(list (token 'id '(#\d #\i #\v #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
-     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 27 0)))]
+         [(list (token 'id '(#\m #\u #\l #\t)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
+          (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 24 0)))]
+         [(list (token 'id '(#\m #\u #\l #\t #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
+          (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 25 0)))]
+         [(list (token 'id '(#\d #\i #\v)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
+          (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 26 0)))]
+         [(list (token 'id '(#\d #\i #\v #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
+          (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 27 0)))]
          ;sw lw
-    [(list (token 'id '(#\s #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
-     (if (and (>= i -32768)(<= i 32767))
-         (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
-         (error 'ERROR "exceed 0xffff\n"))]
-    [(list (token 'id '(#\s #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
-     (if (and (>= i 0)(<= i 65535))
-         (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
-         (error 'ERROR "exceed 0xffff\n"))]
-    [(list (token 'id '(#\l #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
-     (if (and (>= i -32768)(<= i 32767))
-         (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
-         (error 'ERROR "exceed 0xffff\n"))]
-    [(list (token 'id '(#\l #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
-     (if (and (>= i -32768)(<= i 32767))
-         (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
-         (error 'ERROR "exceed 0xffff\n"))]
-    [else (error 'ERROR "unexpected commend line\n")])])))
+         [(list (token 'id '(#\s #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
+          (if (and (>= i -32768)(<= i 32767))
+              (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
+              (error 'ERROR "exceed 0xffff\n"))]
+         [(list (token 'id '(#\s #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
+          (if (and (>= i 0)(<= i 65535))
+              (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
+              (error 'ERROR "exceed 0xffff\n"))]
+         [(list (token 'id '(#\l #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
+          (if (and (>= i -32768)(<= i 32767))
+              (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
+              (error 'ERROR "exceed 0xffff\n"))]
+         [(list (token 'id '(#\l #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
+          (if (and (>= i 0)(<= i 65535))
+              (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))
+              (error 'ERROR "exceed 0xffff\n"))]
+         [else (error 'ERROR "unexpected commend line\n")])])))
 
 
 
