@@ -318,13 +318,13 @@
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 26 0)))]
     [(list (token 'id '(#\d #\i #\v #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 27 0)))]
-    [(list (token 'id '(#\s #\u)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'lparen '(#\))))
+    [(list (token 'id '(#\s #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
      (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
-    [(list (token 'id '(#\s #\u)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'lparen '(#\))))
+    [(list (token 'id '(#\s #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
      (output (bitwise-ior (arithmetic-shift 43 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
-    [(list (token 'id '(#\l #\u)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'lparen '(#\))))
+    [(list (token 'id '(#\l #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'int i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
      (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
-    [(list (token 'id '(#\l #\u)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'lparen '(#\))))
+    [(list (token 'id '(#\l #\w)) (token 'register d)  (token 'comma '(#\,)) (token 'hexint i) (token 'lparen '(#\())  (token 'register s) (token 'rparen '(#\))))
      (output (bitwise-ior (arithmetic-shift 35 26) (arithmetic-shift s 21) (arithmetic-shift d 16) (bitwise-and i #xffff)))]
     [else (error 'ERROR "unexpected commend line\n")])])))
 
