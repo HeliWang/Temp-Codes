@@ -298,6 +298,15 @@
      (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 18 0)))]
     [(list (token 'id '(#\m #\f #\h #\i)) (token 'register d))
      (output (bitwise-ior (arithmetic-shift 0 16) (arithmetic-shift d 11) (arithmetic-shift 16 0)))]
+         ; mult, multu, div, divu
+    [(list (token 'id '(#\m #\u #\l #\t)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
+     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 24 0)))]
+    [(list (token 'id '(#\m #\u #\l #\t #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
+     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 25 0)))]
+    [(list (token 'id '(#\d #\i #\v)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
+     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 26 0)))]
+    [(list (token 'id '(#\d #\i #\v #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s))
+     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift d 21) (arithmetic-shift s 16) (arithmetic-shift 27 0)))]
     [else (error 'ERROR "unexpected commend line\n")])])))
 
 
