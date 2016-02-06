@@ -199,6 +199,7 @@
   (hash-set! label-ht (substring name 0 (- (string-length name) 1)) line-num) false))
 
 ; This function is to add and clean labels
+; also translate beq/bne $_, $_, label to beq/bne $_, $_, number
 (define (clean-label lines line-num)
   (cond [(empty? lines) empty]
         [else
@@ -220,7 +221,19 @@
                 (local [(define after-label (single-line-add-label single-line))]
                 (cond [(empty? after-label) (clean-label (rest lines) line-num)] ;If it is all labels in one line, then the line-num should not be changed
                       [else (cons after-label (clean-label (rest lines) (+ 4 line-num)))]))]
-             [else (cons (first lines) (clean-label (rest lines) (+ 4 line-num)))]))]))
+             [else
+
+              (match single-line [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
+                      (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
+                          (cons (list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
+                                      (token 'int (- line-num (hash-ref label-ht (list->string i) -2))))
+                                (clean-label (rest lines) (+ 4 line-num))))]
+                [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
+                      (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
+                          (cons (list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
+                                      (token 'int (- line-num (hash-ref label-ht (list->string i) -2))))
+                                (clean-label (rest lines) (+ 4 line-num))))]
+                [_ (cons single-line (clean-label (rest lines) (+ 4 line-num)))])]))]))
 
 
 ; jr option = 8, jalr option = 9
@@ -262,10 +275,6 @@
      (if (and (>= i 0)(<= i 65535)) (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff))) (error 'ERROR "exceed 0xffff\n"))]
     [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'hexint i))
      (if (and (>= i 0)(<= i 65535)) (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff))) (error 'ERROR "exceed 0xffff\n"))]
-    [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'int i))
-     (if (and (>= i -32768)(<= i 32767)) (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff))) (error 'ERROR "exceed 0xffff\n"))]
-    [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'int i))
-     (if (and (>= i -32768)(<= i 32767)) (output (bitwise-ior (arithmetic-shift 5 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff))) (error 'ERROR "exceed 0xffff\n"))]
     [else (error 'ERROR "unexpected commend line\n")])])))
 
 
