@@ -226,12 +226,12 @@
               (match single-line [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
                       (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
                           (cons (list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
-                                      (token 'int (- line-num (hash-ref label-ht (list->string i) -2))))
+                                      (token 'int (- (/ (- (hash-ref label-ht (list->string i) -2) line-num) 4) 1)))
                                 (clean-label (rest lines) (+ 4 line-num))))]
                 [(list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'id i))
                       (if (= (hash-ref label-ht (list->string i) -2) -2) (error 'ERROR "No such a label\n")
                           (cons (list (token 'id '(#\b #\n #\e)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,))
-                                      (token 'int (- line-num (hash-ref label-ht (list->string i) -2))))
+                                      (token 'int (- (/ (- (hash-ref label-ht (list->string i) -2) line-num) 4) 1)))
                                 (clean-label (rest lines) (+ 4 line-num))))]
                 [_ (cons single-line (clean-label (rest lines) (+ 4 line-num)))])]))]))
 
