@@ -254,6 +254,8 @@
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 42 0)))]
     [(list (token 'id '(#\s #\l #\t #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 43 0)))]
+    [(list (token 'id '(#\b #\e #\q)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'int i))
+     (output (bitwise-ior (arithmetic-shift 4 26) (arithmetic-shift d 21) (arithmetic-shift s 16)  (bitwise-and i #xffff)))]
     [else (error 'ERROR "unexpected commend line\n")])])))
 
 
