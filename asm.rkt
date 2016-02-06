@@ -247,9 +247,9 @@
       [else
        (match single-line
     [(list (token 'id '(#\a #\d #\d)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
-     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 34 0)))]
-    [(list (token 'id '(#\s #\u #\b)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 32 0)))]
+    [(list (token 'id '(#\s #\u #\b)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
+     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 34 0)))]
     [(list (token 'id '(#\s #\l #\t)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
      (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift s 21) (arithmetic-shift t 16) (arithmetic-shift d 11) (arithmetic-shift 42 0)))]
     [(list (token 'id '(#\s #\l #\t #\u)) (token 'register d) (token 'comma '(#\,)) (token 'register s) (token 'comma '(#\,)) (token 'register t))
