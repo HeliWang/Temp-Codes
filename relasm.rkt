@@ -214,10 +214,6 @@
                      (error 'ERROR "Existing label ~a can not be added\n" (list->string (token-lexeme (first line-with-labels)))))]
                 [(not (= 0 (length (filter (lambda (single-token) (equal? (token-kind single-token) 'label)) line-with-labels))))
                  (error 'ERROR "Label not at the beginning of a line\n")]
-                [(and (equal? (token-kind (first line-with-labels)) 'dotword) (not (empty? (rest line-with-labels))) (equal? (token-kind (first (rest line-with-labels))) 'id))
-                  (hash-set! label-ht-forMERL   line-num line-num)
-                  
-                     (cons (first line-with-labels) (single-line-add-label (rest line-with-labels)))]
                 [else (cons (first line-with-labels) (single-line-add-label (rest line-with-labels)))]))]
       
            (cond
@@ -226,9 +222,6 @@
                 (cond [(empty? after-label) (clean-label (rest lines) line-num)] ;If it is all labels in one line, then the line-num should not be changed
                       [else (cons after-label (clean-label (rest lines) (+ 4 line-num)))]))]
              [else (cons single-line (clean-label (rest lines) (+ 4 line-num)))]))]))
-
-;(list (token 'id '(#\b #\e #\q)) (token 'register 0) (token 'comma '(#\,)) (token 'register 0) (token 'comma '(#\,)) (token 'int 2))
-
 
 
 
@@ -346,9 +339,33 @@
               (error 'ERROR "exceed 0xffff\n"))]
          [else (error 'ERROR "unexpected commend line\n")])])))
 
+ 
+; This function is to add label records(prepare MERL files)
+(define (calculate-relocated-label lines line-num)
+  (cond [(empty? lines) empty]
+        [else
+         (local
+           [(define single-line (first lines))
+            (define (single-line-calc-label line-with-labels)
+              (cond
+                [(empty? line-with-labels) empty]
+                [(equal? (token-kind (first line-with-labels)) 'label)  (single-line-calc-label (rest line-with-labels))]
+                [(and (equal? (token-kind (first line-with-labels)) 'dotword) (not (empty? (rest line-with-labels))) (equal? (token-kind (first (rest line-with-labels))) 'id))
+                  (hash-set! label-ht-forMERL (+ line-num 12) (+ line-num 12)) ;need to add the line number of headers
+                  (cons (first line-with-labels) (single-line-calc-label (rest line-with-labels)))]
+                [else (cons (first line-with-labels) (single-line-calc-label (rest line-with-labels)))]))]
+                  (local [(define after-label (single-line-calc-label single-line))]
+                  (cond [(empty? after-label) (cons single-line (calculate-relocated-label (rest lines) line-num))]
+                      ;If it is all labels in one line, then the line-num should not be changed
+                      [else  (cons single-line  (calculate-relocated-label (rest lines) (+ 4 line-num)))])))]))
+
+
+ 
+
+
 
 ; read lines from user and record labels preparing for MERL files
-(define read-from-user (scan-input))
+(define read-from-user (calculate-relocated-label (scan-input) 0))
 
 ;add header
 (define add-header (append
