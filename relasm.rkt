@@ -279,7 +279,7 @@
 (define (jr-jalr-parse par option)
   (match par
     [(token 'register token-lexeme-value)
-     (output bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift token-lexeme-value 21)  (arithmetic-shift option 0))
+     (output (bitwise-ior (arithmetic-shift 0 26) (arithmetic-shift token-lexeme-value 21)  (arithmetic-shift option 0)))
      void]
     [_ (error 'ERROR "unexpected commend line jr/jalr in parse\n")]))
 
@@ -369,14 +369,14 @@
    (list (token 'dotword '(#\. #\w #\o #\r #\d)) (token 'id '(#\e #\n #\d #\F))) ;endfile
    (list (token 'dotword '(#\. #\w #\o #\r #\d)) (token 'id '(#\e #\n #\d #\C)))) ;endcode
   read-from-user
-  (list (list (token 'label '(#\e #\n #\d #\C #\:)))))) ;endfile
+  (list (list (token 'label '(#\e #\n #\d #\C #\O)))))) ;endfile
 
 ;add endCode
 (hash-for-each label-ht-forMERL (lambda (x y) (set! add-header (append add-header (list (list (token 'dotword '(#\. #\w #\o #\r #\d)) (token 'hexint 1))
 (list (token 'dotword '(#\. #\w #\o #\r #\d)) (token 'id (string->list x))))))))
 
 ;add endFile
-(set! add-header (append add-header (list (list (token 'label '(#\e #\n #\d #\F #\:))))))
+(set! add-header (append add-header (list (list (token 'label '(#\e #\n #\d #\F #\I))))))
 
 
 (define (scan-all)  (map recog-ins (translate-label (clean-label add-header 0) 0)) (void))
