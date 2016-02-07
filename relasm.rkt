@@ -178,7 +178,7 @@
     [else (scan-input)]))
 
 (define (output token-lexeme-value)
-  (cond [(= token-lexeme-value -2) (error 'ERROR "no existing label\n")]
+  (cond [(= token-lexeme-value -200000) (error 'ERROR "no existing label\n")]
         [else
          (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -24) #xff))
          (write-byte (bitwise-and (arithmetic-shift token-lexeme-value -16) #xff))
@@ -191,7 +191,7 @@
     [(or (token 'int token-lexeme-value) (token 'hexint token-lexeme-value))
      (output token-lexeme-value)]
     [(token 'id token-lexeme-value) 
-     (output (hash-ref label-ht (list->string token-lexeme-value) -2))]
+     (output (hash-ref label-ht (list->string token-lexeme-value) -200000))]
     [_ (error 'ERROR "unexpected commend line in parse\n")]))
 
 
@@ -226,22 +226,25 @@
 ;(list (token 'id '(#\b #\e #\q)) (token 'register 0) (token 'comma '(#\,)) (token 'register 0) (token 'comma '(#\,)) (token 'int 2))
 
 ; This function is to add label records(prepare MERL files)
-(define (calculate-label lines)
+(define (calculate-relocated-label lines)
   (cond [(empty? lines) empty]
         [else
          (local
            [(define single-line (first lines))
             (define (add-name-toMERL name)
-              (hash-set! label-ht-forMERL (substring name 0 (- (string-length name) 1)) 0))
+              (hash-set! label-ht-forMERL   name  0))
             (define (single-line-calc-label line-with-labels)
               (cond [(empty? line-with-labels) empty]
                     [else
-                     (cond
-                       [(equal? (token-kind (first line-with-labels)) 'label)
-                        (add-name-toMERL (list->string (token-lexeme (first line-with-labels))))])
+                     (match   line-with-labels
+                       [(list (token 'dotword '(#\. #\w #\o #\r #\d)) (token 'id d))
+                                                     ; (error (list->string d))
+                                                      (add-name-toMERL (list->string d))
+                                                      ]
+                       [_ void])
                      (cons (first line-with-labels) (single-line-calc-label (rest line-with-labels)))]))]
             (single-line-calc-label single-line)
-            (cons single-line (calculate-label (rest lines))))]))
+            (cons single-line (calculate-relocated-label (rest lines))))]))
 
 
 
@@ -361,7 +364,7 @@
 
 
 ; read lines from user and record labels preparing for MERL files
-(define read-from-user (calculate-label (scan-input)))
+(define read-from-user (calculate-relocated-label (scan-input)))
 
 ;add header
 (define add-header (append
@@ -383,6 +386,6 @@
 
 (scan-all)
 ;label tables
-(hash-for-each label-ht (lambda (x y) (fprintf  (current-error-port) "~a ~a\n" x y)))
+(hash-for-each label-ht (lambda (x y) (if (not (or (equal? x "endF") (equal? x "endC"))) (fprintf  (current-error-port) "~a ~a\n" x y) void)))
 
 

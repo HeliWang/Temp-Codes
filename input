@@ -1,7 +1,8 @@
 
 A: lis $3
-rel3:  rel2: .word B
+rel3:  rel2:
 beq $4, $3, A
 B:beq $0,$3,B
+ .word B
 C: lw $27, -4($30)
 jr $31
