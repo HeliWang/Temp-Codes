@@ -214,6 +214,10 @@
                      (error 'ERROR "Existing label ~a can not be added\n" (list->string (token-lexeme (first line-with-labels)))))]
                 [(not (= 0 (length (filter (lambda (single-token) (equal? (token-kind single-token) 'label)) line-with-labels))))
                  (error 'ERROR "Label not at the beginning of a line\n")]
+                [(and (equal? (token-kind (first line-with-labels)) 'dotword) (not (empty? (rest line-with-labels))) (equal? (token-kind (first (rest line-with-labels))) 'id))
+                  (hash-set! label-ht-forMERL   line-num line-num)
+                  
+                     (cons (first line-with-labels) (single-line-add-label (rest line-with-labels)))]
                 [else (cons (first line-with-labels) (single-line-add-label (rest line-with-labels)))]))]
       
            (cond
@@ -225,26 +229,6 @@
 
 ;(list (token 'id '(#\b #\e #\q)) (token 'register 0) (token 'comma '(#\,)) (token 'register 0) (token 'comma '(#\,)) (token 'int 2))
 
-; This function is to add label records(prepare MERL files)
-(define (calculate-relocated-label lines)
-  (cond [(empty? lines) empty]
-        [else
-         (local
-           [(define single-line (first lines))
-            (define (add-name-toMERL name)
-              (hash-set! label-ht-forMERL   name  0))
-            (define (single-line-calc-label line-with-labels)
-              (cond [(empty? line-with-labels) empty]
-                    [else
-                     (match   line-with-labels
-                       [(list (token 'dotword '(#\. #\w #\o #\r #\d)) (token 'id d))
-                                                     ; (error (list->string d))
-                                                      (add-name-toMERL (list->string d))
-                                                      ]
-                       [_ void])
-                     (cons (first line-with-labels) (single-line-calc-label (rest line-with-labels)))]))]
-            (single-line-calc-label single-line)
-            (cons single-line (calculate-relocated-label (rest lines))))]))
 
 
 
@@ -364,7 +348,7 @@
 
 
 ; read lines from user and record labels preparing for MERL files
-(define read-from-user (calculate-relocated-label (scan-input)))
+(define read-from-user (scan-input))
 
 ;add header
 (define add-header (append
@@ -376,8 +360,8 @@
 
 ;add endCode
 (hash-for-each label-ht-forMERL (lambda (x y) (set! add-header (append add-header (list (list (token 'dotword '(#\. #\w #\o #\r #\d)) (token 'hexint 1))
-(list (token 'dotword '(#\. #\w #\o #\r #\d)) (token 'id (string->list x))))))))
-
+(list (token 'dotword '(#\. #\w #\o #\r #\d)) (token 'int y)))))))
+               
 ;add endFile
 (set! add-header (append add-header (list (list (token 'label '(#\e #\n #\d #\F #\I))))))
 
@@ -387,5 +371,4 @@
 (scan-all)
 ;label tables
 (hash-for-each label-ht (lambda (x y) (if (not (or (equal? x "endF") (equal? x "endC"))) (fprintf  (current-error-port) "~a ~a\n" x y) void)))
-
 
