@@ -1,11 +1,16 @@
 ; Example for return (a+b)
 
 ; Prologue
-lis     $4
-.word   4
-lis     $11
-.word   1
-sub     $29, $30, $4
+.import print
+lis $22
+.word print
+lis $4
+.word 4
+lis $11
+.word 1
+sw $31, -4($30)
+sub $30, $30, $4
+sub $29, $30, $4
 
 ; initial dcl push
 sw $1, -4($30)
@@ -17,10 +22,10 @@ sub $30, $30, $4
 
 ;Expr1 −> expr2 + term
 ;code(expr_1) = code(expr_2)
-;             + push($3)
-;             + code($term$)
-;             + pop($5)
-;             + add $3, $5, $3
+;  + push($3)
+;  + code($term$)
+;  + pop($5)
+;  + add $3, $5, $3
 
 ; code(factor → ID) - pop
 lw $3, 0($29)
@@ -40,4 +45,6 @@ lw $5, -4($30)
 add $3, $5, $3
 
 add $30, $29, $4
-jr  $31
+add $30, $30, $4
+lw $31, -4($30)
+jr $31
