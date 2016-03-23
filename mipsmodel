@@ -2,7 +2,7 @@
 
 ; Prologue
 .import print
-lis $22
+lis $10
 .word print
 lis $4
 .word 4
